@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name',32)->unique();
-            $table->boolean('type')->default(true); // true for expense, false for income
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('name',32);
+            $table->enum('type', ['income', 'expense']);
             $table->string('icon');
             $table->timestamps();
         });

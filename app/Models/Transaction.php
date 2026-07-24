@@ -10,6 +10,7 @@ class Transaction extends Model
         'user_id',
         'category_id',
         'title',
+        'description',
         'amount',
         'transaction_date',
         'receipt_image',
