@@ -2,65 +2,114 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
-use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the categories available to the authenticated user.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        //
+        $systemCategories = Category::query()
+            ->whereNull('user_id')
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
+        $customCategories = $request->user()
+            ->categories()
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
+        return view('categories.index', [
+            'systemCategories' => $systemCategories,
+            'customCategories' => $customCategories,
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a custom category.
      */
-    public function create()
+    public function create(): View
     {
-        //
+        return view('categories.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a new custom category.
      */
-    public function store(Request $request)
+    public function store(CategoryRequest $request): RedirectResponse
     {
-        //
+        $request->user()
+            ->categories()
+            ->create($request->validated());
+
+        return redirect()
+            ->route('categories.index')
+            ->with('status', 'category-created');
     }
 
     /**
-     * Display the specified resource.
+     * Show the form for editing a custom category.
      */
-    public function show(Category $category)
+    public function edit(Request $request, Category $category): View
     {
-        //
+        $this->ensureOwnedByAuthenticatedUser($request, $category);
+
+        return view('categories.edit', [
+            'category' => $category,
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Update a custom category.
      */
-    public function edit(Category $category)
+    public function update(CategoryRequest $request, Category $category): RedirectResponse
     {
-        //
+        $this->ensureOwnedByAuthenticatedUser($request, $category);
+
+        $category->update($request->validated());
+
+        return redirect()
+            ->route('categories.index')
+            ->with('status', 'category-updated');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Delete a custom category.
      */
-    public function update(Request $request, Category $category)
+    public function destroy(Request $request, Category $category): RedirectResponse
     {
-        //
+        $this->ensureOwnedByAuthenticatedUser($request, $category);
+
+        if ($category->transactions()->exists()) {
+            return redirect()
+                ->route('categories.index')
+                ->with('error', 'category-in-use');
+        }
+
+        $category->delete();
+
+        return redirect()
+            ->route('categories.index')
+            ->with('status', 'category-deleted');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Ensure that only the owner of a custom category may modify it.
      */
-    public function destroy(Category $category)
+    private function ensureOwnedByAuthenticatedUser(Request $request, Category $category): void
     {
-        //
+        abort_if(
+            $category->user_id === null
+            || (int) $category->user_id !== (int) $request->user()->id,
+            403
+        );
     }
 }

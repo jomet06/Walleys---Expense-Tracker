@@ -313,7 +313,7 @@
 
     {{-- Final CTA Section --}}
     <section class="py-20 lg:py-24">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center rounded-3xl bg-[#111827] py-16 px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 text-center rounded-3xl bg-[#111827] py-16 px-8">
             <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white">
                 Start Managing Your Money Today
             </h2>
