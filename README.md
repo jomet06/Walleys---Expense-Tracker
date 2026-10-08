@@ -10,7 +10,7 @@ Walleys is a personal finance portfolio application built with Laravel 12, PHP 8
 - Income/expense transactions, JPG/PNG/WebP receipts, receipt replacement/deletion, filtering, and pagination.
 - Current-month income, expenses, net balance in Indonesian Rupiah, six-month expense charts, and recent transactions. The monthly breakdown switches between cashflow (combined income and expense movement), income categories, and expense categories.
 - Monthly category insights with ranked amounts, transaction counts, shares, and links to filtered transaction history. Category management remains available below the insights.
-- Responsive app navigation, semantic income/expense colors, inline form feedback, custom error pages, and confirmation dialogs for logout and destructive actions.
+- Responsive app navigation, category icon cards with capitalized display names, semantic income/expense colors, inline form feedback, custom error pages, and confirmation dialogs for logout and destructive actions.
 - Automated feature tests and GitHub Actions for dependency installation, tests, frontend build, and security audits.
 
 Google OAuth implementation is covered by mocked-provider tests. A live Google login still requires your Google Cloud configuration and manual verification; automated tests do not prove that your OAuth consent screen or callback URL is configured correctly.

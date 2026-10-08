@@ -26,7 +26,7 @@ class MonthlyCategorySummary
 
         $rows = $categories->map(fn (Category $category) => [
             'id' => $category->id,
-            'name' => $category->name,
+            'name' => $category->display_name,
             'type' => $category->type,
             'icon' => $category->icon,
             'total' => (int) ($totals->get($category->id)?->total ?? 0),

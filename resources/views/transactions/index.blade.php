@@ -68,7 +68,7 @@
                         <select id="category_id" name="category_id" class="ui-field mt-2" @if ($errors->has('category_id')) aria-invalid="true" aria-describedby="filter-category-error" @endif>
                             <option value="">All Categories</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->name }} — {{ ucfirst($category->type) }}</option>
+                                <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->display_name }} — {{ ucfirst($category->type) }}</option>
                             @endforeach
                         </select>
                         <x-input-error id="filter-category-error" class="mt-2" :messages="$errors->get('category_id')" />
@@ -102,7 +102,7 @@
                                 </span>
                                 <div class="min-w-0 flex-1">
                                     <h3 class="break-words text-sm font-semibold text-gray-900">{{ $transaction->title }}</h3>
-                                    <p class="mt-1 break-words text-xs text-gray-500">{{ $transaction->category->name }}</p>
+                                    <p class="mt-1 break-words text-xs text-gray-500">{{ $transaction->category->display_name }}</p>
                                 </div>
                                 <span class="{{ $transaction->category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($transaction->category->type) }}</span>
                             </div>
@@ -154,7 +154,7 @@
                                             </div>
                                         </div>
                                     </th>
-                                    <td class="px-4 py-4 text-gray-600">{{ $transaction->category->name }}</td>
+                                    <td class="px-4 py-4 text-gray-600">{{ $transaction->category->display_name }}</td>
                                     <td class="whitespace-nowrap px-4 py-4 text-gray-500"><time datetime="{{ $transaction->transaction_date->format('Y-m-d') }}">{{ $transaction->transaction_date->format('d M Y') }}</time></td>
                                     <td class="px-4 py-4"><span class="{{ $transaction->category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($transaction->category->type) }}</span></td>
                                     <td @class(['whitespace-nowrap px-4 py-4 text-right font-semibold tabular-nums', 'text-emerald-700' => $transaction->category->type === 'income', 'text-rose-700' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</td>

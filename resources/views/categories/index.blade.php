@@ -97,15 +97,17 @@
                         <p class="text-xs font-semibold text-slate-600">Highest {{ $type === 'expense' ? 'spending' : 'income' }} first</p>
                         <p class="text-xs text-slate-400" aria-live="polite"><span x-text="visibleCount('{{ $type }}')">{{ $rankedCategories->where('total', '>', 0)->count() }}</span> categories shown</p>
                     </div>
-                    <ol class="divide-y divide-slate-100 px-5 sm:px-6" aria-label="{{ ucfirst($typeLabel) }} by category, highest first">
+                    <ol class="grid gap-3 px-5 py-5 sm:grid-cols-2 sm:px-6 xl:grid-cols-3" aria-label="{{ ucfirst($typeLabel) }} by category, highest first">
                         @foreach ($rankedCategories as $category)
-                            <li class="py-5" data-category-name="{{ $category['name'] }}" data-category-total="{{ $category['total'] }}"
+                            <li class="min-w-0 rounded-xl border border-gray-200 p-4 transition hover:border-brand-200 hover:bg-gray-50/50" data-category-name="{{ $category['name'] }}" data-category-total="{{ $category['total'] }}"
                                 x-show="matches($el.dataset.categoryName, '{{ $type }}', $el.dataset.categoryTotal)"
                                 @if ($category['total'] === 0) style="display: none;" @endif>
-                                <div class="flex items-start gap-3 sm:gap-4">
-                                    <span class="w-5 shrink-0 pt-0.5 text-xs font-medium tabular-nums text-slate-400" aria-hidden="true">{{ $category['total'] > 0 ? str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) : '—' }}</span>
+                                <div class="flex items-start gap-3">
+                                    <span @class(['flex h-12 w-12 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $type === 'income', 'bg-rose-50 text-rose-700' => $type === 'expense'])>
+                                        <x-category-icon :name="$category['icon']" class="h-6 w-6" />
+                                    </span>
                                     <div class="min-w-0 flex-1">
-                                        <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                                        <div class="flex flex-col items-start gap-2">
                                             <a href="{{ route('transactions.index', ['category_id' => $category['id'], 'type' => $type, 'start_date' => $periodStart, 'end_date' => $periodEnd]) }}" class="min-w-0 break-words text-sm font-semibold text-slate-800 transition hover:text-brand-700">{{ $category['name'] }}</a>
                                             <p @class(['min-w-0 max-w-full break-words text-sm font-bold tabular-nums sm:text-base', 'text-rose-600' => $type === 'expense' && $category['total'] > 0, 'text-emerald-700' => $type === 'income' && $category['total'] > 0, 'text-slate-400' => $category['total'] === 0])>Rp {{ number_format($category['total'], 0, ',', '.') }}</p>
                                         </div>
@@ -153,25 +155,32 @@
                     <p class="max-w-lg text-xs leading-relaxed text-slate-500">Default categories are available to every user and cannot be edited or deleted. Custom categories belong to your account.</p>
                     <a href="{{ route('categories.create') }}" class="ui-button-secondary"><x-ui-icon name="plus" class="h-4 w-4" /> Add Category</a>
                 </div>
-                <ul class="divide-y divide-slate-100" aria-label="Available categories">
+                <ul class="grid gap-3 py-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Available categories">
                     @forelse ($allCategories as $category)
-                        <li class="flex flex-wrap items-center justify-between gap-3 py-4">
-                            <div class="min-w-0 flex-1">
-                                <h3 class="break-words text-sm font-semibold text-slate-800">{{ $category->name }}</h3>
-                                <p class="mt-1 text-xs text-slate-400">{{ $category->user_id === null ? 'Default' : 'Custom' }} · {{ ucfirst($category->type) }}</p>
+                        <li class="min-w-0 rounded-xl border border-gray-200 p-4 transition hover:border-brand-200 hover:bg-gray-50/50">
+                            <div class="flex items-center gap-3">
+                                <span @class(['flex h-12 w-12 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $category->type === 'income', 'bg-rose-50 text-rose-700' => $category->type === 'expense'])>
+                                    <x-category-icon :name="$category->icon" class="h-6 w-6" />
+                                </span>
+                                <h3 class="min-w-0 flex-1 break-words text-sm font-semibold text-slate-800">{{ $category->display_name }}</h3>
                             </div>
-                            @if ($category->user_id !== null)
-                                <div class="flex shrink-0 items-center gap-3">
-                                    <a href="{{ route('categories.edit', $category) }}" class="ui-link" aria-label="Edit {{ $category->name }}"><x-ui-icon name="edit" class="h-4 w-4" /> Edit</a>
-                                    <form id="delete-category-{{ $category->id }}" method="POST" action="{{ route('categories.destroy', $category) }}"
-                                        @submit.prevent="confirmDelete({{ $category->id }}, $el.dataset.categoryName)" data-category-name="{{ $category->name }}"
-                                        onsubmit="if (!window.Alpine) return confirm('Delete this category?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-slate-500 transition hover:text-red-600" aria-label="Delete {{ $category->name }}"><x-ui-icon name="trash" class="h-4 w-4" /> Delete</button>
-                                    </form>
-                                </div>
-                            @endif
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                                <span class="{{ $category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($category->type) }}</span>
+                                @if ($category->user_id !== null)
+                                    <div class="flex shrink-0 items-center gap-3">
+                                        <a href="{{ route('categories.edit', $category) }}" class="ui-link" aria-label="Edit {{ $category->display_name }}"><x-ui-icon name="edit" class="h-4 w-4" /> Edit</a>
+                                        <form id="delete-category-{{ $category->id }}" method="POST" action="{{ route('categories.destroy', $category) }}"
+                                            @submit.prevent="confirmDelete({{ $category->id }}, $el.dataset.categoryName)" data-category-name="{{ $category->display_name }}"
+                                            onsubmit="if (!window.Alpine) return confirm('Delete this category?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-slate-500 transition hover:text-red-600" aria-label="Delete {{ $category->display_name }}"><x-ui-icon name="trash" class="h-4 w-4" /> Delete</button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">Default category</span>
+                                @endif
+                            </div>
                         </li>
                     @empty
                         <li class="py-8 text-center text-sm text-slate-500">No categories are available.</li>

@@ -11,7 +11,7 @@
             </a>
             <section class="ui-panel">
                 <div class="ui-panel-body">
-                    <h2 class="mb-6 break-words text-base font-bold text-gray-900">Edit {{ $category->name }}</h2>
+                    <h2 class="mb-6 break-words text-base font-bold text-gray-900">Edit {{ $category->display_name }}</h2>
                     <form method="POST" action="{{ route('categories.update', $category) }}" data-validate-form>
                         @csrf
                         @method('PATCH')

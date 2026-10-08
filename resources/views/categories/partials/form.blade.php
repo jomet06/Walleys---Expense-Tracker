@@ -44,25 +44,23 @@
         <x-input-error id="type-error" for="type" class="mt-2" :messages="$errors->get('type')" />
     </fieldset>
 
-    <div data-field x-data="{ selectedIcon: @js($selectedIcon ?? '') }">
-        <label for="icon" class="ui-label">Icon</label>
+    <fieldset data-field @if ($errors->has('icon')) data-invalid="true" @endif>
+        <legend class="ui-label">Icon</legend>
         <p id="icon-hint" class="mt-1 text-xs text-gray-500">Choose an icon for your transaction list.</p>
-        <div class="mt-3 flex items-center gap-3">
-            <span class="flex h-10 w-8 shrink-0 items-center justify-center text-slate-500" aria-hidden="true">
-                <span x-show="!selectedIcon"><x-ui-icon name="categories" class="h-5 w-5" /></span>
-                @foreach ($icons as $value => $label)
-                    <span x-cloak x-show="selectedIcon === $el.dataset.icon" data-icon="{{ $value }}"><x-category-icon :name="$value" class="h-5 w-5" /></span>
-                @endforeach
-            </span>
-            <select id="icon" name="icon" class="ui-field" required x-on:change="selectedIcon = $event.target.value" aria-describedby="icon-hint{{ $errors->has('icon') ? ' icon-error' : '' }}" @if ($errors->has('icon')) aria-invalid="true" @endif>
-                <option value="">Choose an icon</option>
-                @foreach ($icons as $value => $label)
-                    <option value="{{ $value }}" @selected($selectedIcon === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
+        <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            @foreach ($icons as $value => $label)
+                <label class="relative cursor-pointer">
+                    <input id="icon-option-{{ $loop->index }}" type="radio" name="icon" value="{{ $value }}" class="peer sr-only" required @checked($selectedIcon === $value)
+                        aria-describedby="icon-hint{{ $errors->has('icon') ? ' icon-error' : '' }}" @if ($errors->has('icon')) aria-invalid="true" @endif>
+                    <span class="flex h-full min-h-[90px] flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 p-3 text-gray-500 transition hover:border-brand-200 peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2">
+                        <x-category-icon :name="$value" class="h-5 w-5" />
+                        <span class="text-center text-xs font-medium">{{ $label }}</span>
+                    </span>
+                </label>
+            @endforeach
         </div>
         <x-input-error id="icon-error" for="icon" class="mt-2" :messages="$errors->get('icon')" />
-    </div>
+    </fieldset>
 
     <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-6">
         <a href="{{ route('categories.index') }}" class="ui-button-secondary">Cancel</a>

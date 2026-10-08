@@ -12,7 +12,7 @@
     </head>
     <body class="app-surface bg-white font-sans antialiased">
         <div class="min-h-screen lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <aside class="hidden flex-col bg-[#172436] p-10 text-white lg:flex xl:p-14">
+            <aside class="hidden flex-col bg-brand-900 p-10 text-white lg:flex xl:p-14">
                 <a href="{{ url('/') }}" class="flex w-fit items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-200" aria-label="Walleys home">
                     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-white"><img src="{{ asset('images/logo.png') }}" alt="" class="h-8 w-auto"></span>
                     <span class="text-xl font-extrabold tracking-tight">Walleys</span>

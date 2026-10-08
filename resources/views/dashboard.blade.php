@@ -30,10 +30,13 @@
         </div>
 
         <div class="grid gap-4 xl:grid-cols-3">
-            <section class="min-w-0 rounded-2xl bg-slate-800 p-6 text-white sm:p-7">
-                <h2 class="text-sm font-medium text-slate-300">Net Balance</h2>
+            <section class="min-w-0 rounded-2xl bg-brand-700 p-6 text-white sm:p-7">
+                <div class="flex items-center justify-between gap-4">
+                    <h2 class="text-sm font-medium text-white/90">Net Balance</h2>
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"><x-ui-icon name="wallet" class="h-5 w-5" /></span>
+                </div>
                 <p class="mt-5 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-[2rem]">Rp {{ number_format($summary['balance'], 0, ',', '.') }}</p>
-                <p class="mt-3 text-xs leading-relaxed text-slate-300">Income minus expenses this month</p>
+                <p class="mt-3 text-xs leading-relaxed text-white/80">Income minus expenses this month</p>
             </section>
 
             @foreach (['income' => 'Total Income', 'expense' => 'Total Expense'] as $key => $label)
@@ -152,10 +155,13 @@
                 @forelse ($recentTransactions as $transaction)
                     <li>
                         <a href="{{ route('transactions.edit', $transaction) }}" class="group flex items-start gap-3 p-5 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 sm:items-center sm:gap-4 sm:px-6">
+                            <span @class(['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $transaction->category->type === 'income', 'bg-rose-50 text-rose-700' => $transaction->category->type === 'expense'])>
+                                <x-category-icon :name="$transaction->category->icon" class="h-5 w-5" />
+                            </span>
                             <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                 <div class="min-w-0">
                                     <p class="break-words text-sm font-semibold text-slate-800 [overflow-wrap:anywhere] group-hover:text-brand-700">{{ $transaction->title }}</p>
-                                    <p class="mt-1 break-words text-xs text-slate-500 [overflow-wrap:anywhere]">{{ $transaction->category->name }} <span class="mx-1 text-slate-300" aria-hidden="true">&middot;</span> <time datetime="{{ $transaction->transaction_date->format('Y-m-d') }}">{{ $transaction->transaction_date->format('d M Y') }}</time></p>
+                                    <p class="mt-1 break-words text-xs text-slate-500 [overflow-wrap:anywhere]">{{ $transaction->category->display_name }} <span class="mx-1 text-slate-300" aria-hidden="true">&middot;</span> <time datetime="{{ $transaction->transaction_date->format('Y-m-d') }}">{{ $transaction->transaction_date->format('d M Y') }}</time></p>
                                 </div>
                                 <div class="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
                                     <p @class(['break-words text-sm font-bold tabular-nums', 'text-emerald-700' => $transaction->category->type === 'income', 'text-rose-700' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '−' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</p>

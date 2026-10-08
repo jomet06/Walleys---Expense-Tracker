@@ -15,12 +15,12 @@
             <option value="">Select a category</option>
             <optgroup label="Income">
                 @foreach ($categories->where('type', 'income') as $category)
-                    <option value="{{ $category->id }}" @selected((string) old('category_id', $transaction?->category_id) === (string) $category->id)>{{ $category->name }} {{ $category->user_id === null ? '(Default)' : '(Custom)' }}</option>
+                    <option value="{{ $category->id }}" @selected((string) old('category_id', $transaction?->category_id) === (string) $category->id)>{{ $category->display_name }} {{ $category->user_id === null ? '(Default)' : '(Custom)' }}</option>
                 @endforeach
             </optgroup>
             <optgroup label="Expense">
                 @foreach ($categories->where('type', 'expense') as $category)
-                    <option value="{{ $category->id }}" @selected((string) old('category_id', $transaction?->category_id) === (string) $category->id)>{{ $category->name }} {{ $category->user_id === null ? '(Default)' : '(Custom)' }}</option>
+                    <option value="{{ $category->id }}" @selected((string) old('category_id', $transaction?->category_id) === (string) $category->id)>{{ $category->display_name }} {{ $category->user_id === null ? '(Default)' : '(Custom)' }}</option>
                 @endforeach
             </optgroup>
         </select>
