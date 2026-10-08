@@ -1,66 +1,112 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Walleys
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Walleys is a personal finance portfolio application built with Laravel 12, PHP 8.3, Breeze (Blade), Tailwind CSS, Alpine.js, Vite, Chart.js, and MySQL. Pest tests use SQLite in memory.
 
-## About Laravel
+## Implemented features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Email/password registration, login, password reset, session logout, and profile/account management.
+- Google sign-in with Laravel Socialite, verified provider identities, state validation, cancellation/error handling, and protection against email-based account takeover.
+- System and user-owned categories, including ownership checks and deletion protection for categories in use.
+- Income/expense transactions, JPG/PNG/WebP receipts, receipt replacement/deletion, filtering, and pagination.
+- Current-month income, expenses, net balance in Indonesian Rupiah, six-month financial charts, category expense breakdown, and recent transactions.
+- Automated feature tests and GitHub Actions for dependency installation, tests, frontend build, and security audits.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Google OAuth implementation is covered by mocked-provider tests. A live Google login still requires your Google Cloud configuration and manual verification; automated tests do not prove that your OAuth consent screen or callback URL is configured correctly.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Local installation
 
-## Learning Laravel
+Requirements: PHP 8.3 or later, Composer 2, Node.js 24, NPM, MySQL, and PHP extensions including mbstring, fileinfo, PDO MySQL and PDO SQLite. Use PHP 8.3 for the same runtime as CI.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+git clone https://github.com/jomet06/Walleys---Expense-Tracker.git
+cd Walleys---Expense-Tracker
+composer install
+npm ci
+cp .env.example .env
+php artisan key:generate
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+PowerShell users can use `Copy-Item .env.example .env` instead of `cp`. Never overwrite an existing `.env`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Create an empty MySQL database named `walleys`. Configure your private `.env`:
 
-## Laravel Sponsors
+```dotenv
+APP_NAME=Walleys
+APP_URL=http://localhost:8000
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=walleys
+DB_USERNAME=your_database_user
+DB_PASSWORD=your_database_password
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Then apply pending migrations and expose uploaded receipts:
 
-### Premium Partners
+```bash
+php artisan migrate
+php artisan storage:link
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+For an existing installation, back up the database first and run only `php artisan migrate`. Do not run `migrate:fresh` against development or production data. The Google migration adds a unique nullable provider ID and allows a null password for Google-only users.
 
-## Contributing
+Seeders are optional demo data. Inspect them before running: they contain sample accounts and are not intended for production.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Google OAuth configuration
 
-## Code of Conduct
+1. In Google Cloud, configure an OAuth consent screen and create an OAuth client of type **Web application**. If the consent screen is in Testing, add your Google account as a test user.
+2. Add the exact authorized redirect URI for the origin you use. For the commands above it is `http://localhost:8000/auth/google/callback`. For Laragon, use your actual hostname, for example `http://walleys.test/auth/google/callback`. Different hostnames, ports, schemes, or paths must be registered separately.
+3. Set these only in your private `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```dotenv
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+```
 
-## Security Vulnerabilities
+4. Run `php artisan config:clear`. Use the same hostname throughout login so the session cookie and OAuth state survive the redirect.
+5. Verify live flows: a new Google user, a returning Google user, cancellation, logout, and an email collision with an existing password account.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Without configuration, the Google button returns a friendly error and email/password authentication remains available. Do not send credentials through chat or commit them. Production must use HTTPS and `APP_DEBUG=false`.
 
-## License
+Accounts are matched by the stable Google provider ID. An existing account with the same email is **never automatically linked**. Sign in using that account's existing method. Google identities cannot be changed through profile fields; the stored Google-account email is read-only. A Google-only user has no password and can use **Set a password via email** on the profile page. This sends a reset link to the stored account email and signs the user out to open the guest-only Breeze reset form. The **Forgot password** page also works when signed out. Set a password before using password confirmation for account deletion or password changes. Configure a real mail transport for those flows. With `MAIL_MAILER=log` during local development, reset links are written to `storage/logs/laravel.log`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+OAuth access/refresh tokens are not stored because Walleys does not call Google APIs after authentication.
+
+Reference: [Laravel Socialite](https://laravel.com/docs/12.x/socialite) and [Google web-server OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server).
+
+## Development
+
+Run in two terminals:
+
+```bash
+php artisan serve
+```
+
+```bash
+npm run dev
+```
+
+Open the host configured in `APP_URL`. Alternatively, `composer run dev` starts the server, queue listener, log viewer, and Vite together.
+
+## Tests and production build
+
+```bash
+php artisan test
+npm run build
+composer audit
+npm audit
+npm audit --omit=dev
+```
+
+`phpunit.xml` forces `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:`. The test bootstrap refuses to run database tests with another database configuration. Google tests mock Socialite and require no real credentials or network calls.
+
+The CI workflow runs PHP 8.3 and Node 24, installs locked dependencies, generates a temporary application key, builds Vite assets, and runs the complete Pest suite. It also audits Composer, production NPM dependencies, and rejects critical frontend advisories.
+
+Some development-only Tailwind 3 dependencies have high/moderate audit advisories without a compatible upstream fix. They are reported by `npm audit`; they are not suppressed. Do not run `npm audit fix --force` blindly, as it replaces Tailwind 3 with Tailwind 4 and requires a CSS/build migration. The critical shell-quote issue is addressed by a patched compatible override.
+
+## Storage and data behavior
+
+Amounts are integer Rupiah, with no fractional currency values. Transaction input is bounded to the existing MySQL integer column. Analytics use `transaction_date` and `categories.type`, and all queries are scoped to the authenticated user. Category type changes affect how existing transactions are classified. Uploaded receipts use the public disk: treat receipt URLs as public files and avoid uploading sensitive documents. Account deletion also removes that user's receipt files.
+
+Browser smoke testing and live Google verification must be recorded separately from automated tests before the final release is approved.
