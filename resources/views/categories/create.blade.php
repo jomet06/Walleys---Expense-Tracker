@@ -13,8 +13,9 @@
                 <div class="ui-panel-body">
                     <h2 class="text-base font-bold text-gray-900">Create a custom category</h2>
                     <p class="mt-1 mb-6 text-sm text-gray-500">Give it a name and choose an icon you can recognize at a glance.</p>
-                    <form method="POST" action="{{ route('categories.store') }}">
+                    <form method="POST" action="{{ route('categories.store') }}" data-validate-form>
                         @csrf
+                        <x-validation-summary :error-bag="$errors->getBag('default')" />
                         @include('categories.partials.form', ['category' => null, 'submitLabel' => 'Create Category'])
                     </form>
                 </div>

@@ -7,12 +7,13 @@
 
     <x-auth-session-status class="mb-5" :status="session('status')" />
 
-    <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
+    <form method="POST" action="{{ route('password.email') }}" class="space-y-5" data-validate-form>
         @csrf
-        <div>
+        <x-validation-summary :error-bag="$errors->getBag('default')" />
+        <div data-field>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="mt-2 block w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="you@example.com" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-error id="email-error" for="email" :messages="$errors->get('email')" class="mt-2" />
         </div>
         <x-primary-button class="w-full justify-center py-3">{{ __('Email Password Reset Link') }}</x-primary-button>
     </form>

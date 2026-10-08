@@ -7,9 +7,10 @@
         </div>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="mt-7 max-w-xl space-y-5">
+    <form method="post" action="{{ route('password.update') }}" class="mt-7 max-w-xl space-y-5" data-validate-form>
         @csrf
         @method('put')
+        <x-validation-summary :error-bag="$errors->getBag('updatePassword')" />
 
         <div class="flex justify-end">
             <button type="button" x-on:click="showPasswords = !showPasswords" x-bind:aria-pressed="showPasswords" aria-controls="update_password_current_password update_password_password update_password_password_confirmation" class="ui-link flex min-h-11 items-center gap-2 text-xs">
@@ -18,20 +19,20 @@
                 <span x-text="showPasswords ? 'Hide passwords' : 'Show passwords'">Show passwords</span>
             </button>
         </div>
-        <div>
+        <div data-field>
             <x-input-label for="update_password_current_password" :value="__('Current Password')" />
-            <x-text-input id="update_password_current_password" name="current_password" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="current-password" />
-            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
+            <x-text-input error-bag="updatePassword" id="update_password_current_password" name="current_password" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="current-password" required />
+            <x-input-error id="update_password_current_password-error" for="update_password_current_password" :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
         </div>
-        <div>
+        <div data-field>
             <x-input-label for="update_password_password" :value="__('New Password')" />
-            <x-text-input id="update_password_password" name="password" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
+            <x-text-input error-bag="updatePassword" id="update_password_password" name="password" minlength="8" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="new-password" required />
+            <x-input-error id="update_password_password-error" for="update_password_password" :messages="$errors->updatePassword->get('password')" class="mt-2" />
         </div>
-        <div>
+        <div data-field>
             <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
+            <x-text-input error-bag="updatePassword" id="update_password_password_confirmation" name="password_confirmation" type="password" x-bind:type="showPasswords ? 'text' : 'password'" class="mt-2 block w-full" autocomplete="new-password" required />
+            <x-input-error id="update_password_password_confirmation-error" for="update_password_password_confirmation" :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center gap-4 border-t border-gray-100 pt-5">

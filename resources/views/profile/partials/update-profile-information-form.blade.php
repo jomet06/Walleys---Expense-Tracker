@@ -11,19 +11,20 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-7 max-w-xl space-y-5">
+    <form method="post" data-validate-form action="{{ route('profile.update') }}" class="mt-7 max-w-xl space-y-5">
         @csrf
         @method('patch')
-        <div>
+        <x-validation-summary :error-bag="$errors->getBag('default')" />
+        <div data-field>
             <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-2 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <x-text-input id="name" name="name" maxlength="255" type="text" class="mt-2 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            <x-input-error id="name-error" for="name" class="mt-2" :messages="$errors->get('name')" />
         </div>
 
-        <div>
+        <div data-field>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" name="email" type="email" class="mt-2 block w-full" :value="old('email', $user->email)" required autocomplete="username" :readonly="$user->google_id !== null" :aria-describedby="$user->google_id ? 'google-email-hint' : null" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-input-error id="email-error" for="email" class="mt-2" :messages="$errors->get('email')" />
             @if ($user->google_id)
                 <p id="google-email-hint" class="mt-2 flex items-center gap-1.5 text-xs leading-relaxed text-gray-500"><x-ui-icon name="lock" class="h-3.5 w-3.5 shrink-0" />Your email is managed by your Google account.</p>
             @endif

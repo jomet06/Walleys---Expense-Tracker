@@ -9,8 +9,9 @@
             <section class="ui-panel">
                 <div class="ui-panel-body">
                     <h2 class="mb-6 text-base font-bold text-gray-900">Record a transaction</h2>
-                    <form method="POST" action="{{ route('transactions.store') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('transactions.store') }}" enctype="multipart/form-data" data-validate-form>
                         @csrf
+                        <x-validation-summary :error-bag="$errors->getBag('default')" />
                         @include('transactions.partials.form', ['transaction' => null, 'submitLabel' => 'Create Transaction'])
                     </form>
                 </div>

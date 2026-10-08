@@ -97,7 +97,7 @@
                     @foreach ($transactions as $transaction)
                         <article class="p-5 sm:px-6">
                             <div class="flex items-center gap-3">
-                                <span @class(['flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', 'bg-brand-100 text-brand-700' => $transaction->category->type === 'income', 'bg-[#fff3eb] text-[#b56438]' => $transaction->category->type === 'expense'])>
+                                <span @class(['flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $transaction->category->type === 'income', 'bg-rose-50 text-rose-700' => $transaction->category->type === 'expense'])>
                                     <x-category-icon :name="$transaction->category->icon" class="h-5 w-5" />
                                 </span>
                                 <div class="min-w-0 flex-1">
@@ -107,7 +107,7 @@
                                 <span class="{{ $transaction->category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($transaction->category->type) }}</span>
                             </div>
                             <div class="mt-4 flex flex-wrap items-end justify-between gap-2">
-                                <p @class(['block min-w-0 break-words text-lg font-bold tabular-nums', 'text-brand-700' => $transaction->category->type === 'income', 'text-[#b56438]' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</p>
+                                <p @class(['block min-w-0 break-words text-lg font-bold tabular-nums', 'text-emerald-700' => $transaction->category->type === 'income', 'text-rose-700' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</p>
                                 <time datetime="{{ $transaction->transaction_date->format('Y-m-d') }}" class="pb-0.5 text-xs text-gray-500">{{ $transaction->transaction_date->format('d M Y') }}</time>
                             </div>
                             @if ($transaction->description)
@@ -147,7 +147,7 @@
                                 <tr class="transition hover:bg-gray-50/60">
                                     <th scope="row" class="px-6 py-4 text-left font-normal">
                                         <div class="flex items-center gap-3">
-                                            <span @class(['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', 'bg-brand-100 text-brand-700' => $transaction->category->type === 'income', 'bg-[#fff3eb] text-[#b56438]' => $transaction->category->type === 'expense'])><x-category-icon :name="$transaction->category->icon" class="h-5 w-5" /></span>
+                                            <span @class(['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $transaction->category->type === 'income', 'bg-rose-50 text-rose-700' => $transaction->category->type === 'expense'])><x-category-icon :name="$transaction->category->icon" class="h-5 w-5" /></span>
                                             <div class="max-w-[220px]">
                                                 <a href="{{ route('transactions.edit', $transaction) }}" class="break-words font-semibold text-gray-900 hover:text-brand-600">{{ $transaction->title }}</a>
                                                 @if ($transaction->description)<p class="mt-1 truncate text-xs text-gray-500" title="{{ $transaction->description }}">{{ $transaction->description }}</p>@endif
@@ -157,7 +157,7 @@
                                     <td class="px-4 py-4 text-gray-600">{{ $transaction->category->name }}</td>
                                     <td class="whitespace-nowrap px-4 py-4 text-gray-500"><time datetime="{{ $transaction->transaction_date->format('Y-m-d') }}">{{ $transaction->transaction_date->format('d M Y') }}</time></td>
                                     <td class="px-4 py-4"><span class="{{ $transaction->category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($transaction->category->type) }}</span></td>
-                                    <td @class(['whitespace-nowrap px-4 py-4 text-right font-semibold tabular-nums', 'text-brand-700' => $transaction->category->type === 'income', 'text-[#b56438]' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</td>
+                                    <td @class(['whitespace-nowrap px-4 py-4 text-right font-semibold tabular-nums', 'text-emerald-700' => $transaction->category->type === 'income', 'text-rose-700' => $transaction->category->type === 'expense'])>{{ $transaction->category->type === 'income' ? '+' : '-' }} Rp {{ number_format($transaction->amount, 0, ',', '.') }}</td>
                                     <td class="px-4 py-4 text-center">
                                         @if ($transaction->receipt_image)
                                             <a href="{{ asset('storage/' . $transaction->receipt_image) }}" target="_blank" rel="noopener noreferrer" class="inline-flex rounded-lg p-2 text-brand-600 hover:bg-brand-50" aria-label="View receipt for {{ $transaction->title }}"><x-ui-icon name="receipt" class="h-5 w-5" /></a>

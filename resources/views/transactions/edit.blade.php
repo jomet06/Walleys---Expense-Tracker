@@ -9,9 +9,10 @@
             <section class="ui-panel">
                 <div class="ui-panel-body">
                     <h2 class="mb-6 break-words text-base font-bold text-gray-900">Edit {{ $transaction->title }}</h2>
-                    <form method="POST" action="{{ route('transactions.update', $transaction) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('transactions.update', $transaction) }}" enctype="multipart/form-data" data-validate-form>
                         @csrf
                         @method('PATCH')
+                        <x-validation-summary :error-bag="$errors->getBag('default')" />
                         @include('transactions.partials.form', ['transaction' => $transaction, 'submitLabel' => 'Save Changes'])
                     </form>
                 </div>

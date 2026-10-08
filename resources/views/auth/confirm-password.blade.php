@@ -5,9 +5,10 @@
         <p class="ui-description mt-2">{{ __('This is a secure area of the application. Please confirm your password before continuing.') }}</p>
     </header>
 
-    <form method="POST" action="{{ route('password.confirm') }}" class="space-y-5" x-data="{ showPassword: false }">
+    <form method="POST" action="{{ route('password.confirm') }}" class="space-y-5" x-data="{ showPassword: false }" data-validate-form>
         @csrf
-        <div>
+        <x-validation-summary :error-bag="$errors->getBag('default')" />
+        <div data-field>
             <x-input-label for="password" :value="__('Password')" />
             <div class="relative mt-2">
                 <x-text-input id="password" class="block w-full pr-12" type="password" x-bind:type="showPassword ? 'text' : 'password'" name="password" required autofocus autocomplete="current-password" />
@@ -16,7 +17,7 @@
                     <span x-show="showPassword" x-cloak><x-ui-icon name="eye-off" class="h-5 w-5" /></span>
                 </button>
             </div>
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <x-input-error id="password-error" for="password" :messages="$errors->get('password')" class="mt-2" />
         </div>
         <x-primary-button class="w-full justify-center py-3">{{ __('Confirm') }}</x-primary-button>
     </form>

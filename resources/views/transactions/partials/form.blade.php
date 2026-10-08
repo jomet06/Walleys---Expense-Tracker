@@ -1,12 +1,12 @@
 <div class="space-y-6">
-    <div>
+    <div data-field>
         <label for="title" class="ui-label">Title</label>
         <input id="title" name="title" type="text" class="ui-field mt-2" value="{{ old('title', $transaction?->title) }}" required autofocus maxlength="50" placeholder="e.g. Weekly groceries"
             @if ($errors->has('title')) aria-invalid="true" aria-describedby="title-error" @endif>
-        <x-input-error id="title-error" class="mt-2" :messages="$errors->get('title')" />
+        <x-input-error for="title" id="title-error" class="mt-2" :messages="$errors->get('title')" />
     </div>
 
-    <div>
+    <div data-field>
         <div class="flex flex-wrap items-center justify-between gap-2">
             <label for="category_id" class="ui-label">Category</label>
             <a href="{{ route('categories.create') }}" class="ui-link text-xs">Add a category</a>
@@ -24,35 +24,35 @@
                 @endforeach
             </optgroup>
         </select>
-        <x-input-error id="category-error" class="mt-2" :messages="$errors->get('category_id')" />
+        <x-input-error for="category_id" id="category-error" class="mt-2" :messages="$errors->get('category_id')" />
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2">
-        <div>
+        <div data-field>
             <label for="amount" class="ui-label">Amount</label>
             <div class="relative mt-2">
                 <span class="pointer-events-none absolute left-3.5 top-3 text-sm font-semibold text-gray-400" aria-hidden="true">Rp</span>
                 <input id="amount" name="amount" type="number" inputmode="numeric" min="1" max="2147483647" step="1" class="ui-field pl-12" value="{{ old('amount', $transaction?->amount) }}" required placeholder="50000" aria-describedby="amount-hint{{ $errors->has('amount') ? ' amount-error' : '' }}" @if ($errors->has('amount')) aria-invalid="true" @endif>
             </div>
             <p id="amount-hint" class="mt-2 text-xs text-gray-500">Enter the amount as a whole number, for example 50000.</p>
-            <x-input-error id="amount-error" class="mt-2" :messages="$errors->get('amount')" />
+            <x-input-error for="amount" id="amount-error" class="mt-2" :messages="$errors->get('amount')" />
         </div>
-        <div>
+        <div data-field>
             <label for="transaction_date" class="ui-label">Transaction Date</label>
             <input id="transaction_date" name="transaction_date" type="date" class="ui-field mt-2" value="{{ old('transaction_date', $transaction?->transaction_date?->format('Y-m-d')) }}" required
                 @if ($errors->has('transaction_date')) aria-invalid="true" aria-describedby="transaction-date-error" @endif>
-            <x-input-error id="transaction-date-error" class="mt-2" :messages="$errors->get('transaction_date')" />
+            <x-input-error for="transaction_date" id="transaction-date-error" class="mt-2" :messages="$errors->get('transaction_date')" />
         </div>
     </div>
 
-    <div>
+    <div data-field>
         <label for="description" class="ui-label">Description <span class="font-normal text-gray-400">(optional)</span></label>
         <textarea id="description" name="description" rows="3" class="ui-field mt-2 resize-y" placeholder="Add a note about this transaction"
             @if ($errors->has('description')) aria-invalid="true" aria-describedby="description-error" @endif>{{ old('description', $transaction?->description) }}</textarea>
-        <x-input-error id="description-error" class="mt-2" :messages="$errors->get('description')" />
+        <x-input-error for="description" id="description-error" class="mt-2" :messages="$errors->get('description')" />
     </div>
 
-    <div x-data="{
+    <div data-field x-data="{
         receiptName: '', receiptError: '', preview: '',
         clearPreview() { if (this.preview) URL.revokeObjectURL(this.preview); this.preview = ''; },
         selectReceipt(event) {
@@ -89,7 +89,7 @@
                 <button type="button" @click="clearSelection()" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-600"><x-ui-icon name="close" class="h-3.5 w-3.5" /> Remove selected image</button>
             </div>
         </div>
-        <x-input-error id="receipt-error" class="mt-2" :messages="$errors->get('receipt_image')" />
+        <x-input-error for="receipt_image" id="receipt-error" class="mt-2" :messages="$errors->get('receipt_image')" />
 
         @if ($transaction?->receipt_image)
             <div class="mt-4" x-show="!preview">

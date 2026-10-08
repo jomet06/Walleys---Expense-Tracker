@@ -7,15 +7,16 @@
     <x-auth-session-status class="mb-5" :status="session('status')" />
     <x-google-login />
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-5">
+    <form method="POST" action="{{ route('login') }}" class="space-y-5" data-validate-form>
         @csrf
-        <div>
+        <x-validation-summary :error-bag="$errors->getBag('default')" />
+        <div data-field>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="mt-2 block w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="you@example.com" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-error id="email-error" for="email" :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div x-data="{ showPassword: false }">
+        <div data-field x-data="{ showPassword: false }">
             <x-input-label for="password" :value="__('Password')" />
             <div class="relative mt-2">
                 <x-text-input id="password" class="block w-full pr-12" type="password" x-bind:type="showPassword ? 'text' : 'password'" name="password" required autocomplete="current-password" />
@@ -24,7 +25,7 @@
                     <span x-show="showPassword" x-cloak><x-ui-icon name="eye-off" class="h-5 w-5" /></span>
                 </button>
             </div>
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <x-input-error id="password-error" for="password" :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-3">

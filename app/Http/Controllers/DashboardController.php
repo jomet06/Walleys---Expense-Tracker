@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MonthlyCategorySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request, MonthlyCategorySummary $analytics): View
     {
         $currentMonth = CarbonImmutable::now()->startOfMonth();
         $firstMonth = $currentMonth->subMonths(5);
@@ -29,27 +30,20 @@ class DashboardController extends Controller
             ->join('categories', 'categories.id', '=', 'transactions.category_id')
             ->where('transaction_date', '>=', $firstMonth->toDateString())
             ->where('transaction_date', '<', $currentMonth->addMonth()->toDateString())
-            ->select('transaction_date', 'category_id', 'categories.name', 'categories.type')
+            ->select('transaction_date', 'categories.type')
             ->selectRaw('SUM(transactions.amount) as total')
-            ->groupBy('transaction_date', 'category_id', 'categories.name', 'categories.type')
+            ->groupBy('transaction_date', 'categories.type')
             ->get();
 
-        $breakdown = [];
         $currentKey = $currentMonth->format('Y-m');
 
         foreach ($totals as $total) {
             $key = $total->transaction_date->format('Y-m');
             $amount = (int) $total->total;
             $months[$key][$total->type] += $amount;
-
-            if ($key === $currentKey && $total->type === 'expense') {
-                $categoryId = $total->category_id;
-                $breakdown[$categoryId] ??= ['label' => $total->name, 'amount' => 0];
-                $breakdown[$categoryId]['amount'] += $amount;
-            }
         }
 
-        $breakdown = collect($breakdown)->sortByDesc('amount')->values();
+        $insights = $analytics->forMonth($request->user(), $currentMonth);
         $income = $months[$currentKey]['income'];
         $expense = $months[$currentKey]['expense'];
 
@@ -61,10 +55,9 @@ class DashboardController extends Controller
                 'income' => array_column($months, 'income'),
                 'expense' => array_column($months, 'expense'),
             ],
-            'expenseChart' => [
-                'labels' => $breakdown->pluck('label')->all(),
-                'values' => $breakdown->pluck('amount')->all(),
-            ],
+            'expenseChart' => $insights['expenseChart'],
+            'incomeChart' => $insights['incomeChart'],
+            'cashflowChart' => $insights['cashflowChart'],
             'recentTransactions' => $request->user()->transactions()
                 ->with('category')
                 ->orderByDesc('transaction_date')

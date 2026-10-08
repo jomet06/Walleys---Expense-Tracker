@@ -23,7 +23,7 @@
                         <a href="{{ route('dashboard') }}" class="flex items-center gap-2 lg:hidden"><x-application-logo class="h-8 w-8" /><span class="text-base font-bold">Walleys</span></a>
                         <div class="hidden items-center gap-2 text-sm sm:flex">
                             <span class="text-slate-400">Workspace</span><span class="text-slate-300" aria-hidden="true">/</span>
-                            <span class="font-semibold text-slate-700">{{ request()->routeIs('transactions.*') ? 'Transactions' : (request()->routeIs('categories.*') ? 'Categories' : (request()->routeIs('profile.*') ? 'Account' : 'Overview')) }}</span>
+                            <span class="font-semibold text-slate-700">{{ request()->routeIs('transactions.*') ? 'Transactions' : (request()->routeIs('categories.*') ? 'Category insights' : (request()->routeIs('profile.*') ? 'Account' : 'Overview')) }}</span>
                         </div>
                     </div>
                     <div class="flex shrink-0 items-center gap-3">
