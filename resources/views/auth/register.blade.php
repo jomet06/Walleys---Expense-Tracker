@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <x-google-login />
     <form method="POST" action="{{ route('register') }}">
         @csrf
 

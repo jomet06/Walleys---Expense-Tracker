@@ -25,6 +25,7 @@ class ProfileUpdateRequest extends FormRequest
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
+                Rule::when($this->user()->google_id !== null, [Rule::in([$this->user()->email])]),
             ],
         ];
     }
