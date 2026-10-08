@@ -1,35 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Category') }}
-        </h2>
+        <h1 class="ui-title">{{ __('Edit Category') }}</h1>
+        <p class="ui-description">Update the name, type, or icon of your custom category.</p>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold">
-                            Edit {{ $category->name }}
-                        </h3>
-
-                        <p class="mt-1 text-sm text-gray-500">
-                            Update the name, type, or icon of your custom category.
-                        </p>
-                    </div>
-
+    <div class="ui-page">
+        <div class="mx-auto max-w-3xl">
+            <a href="{{ route('categories.index') }}" class="ui-link mb-5 inline-flex items-center gap-2">
+                <x-ui-icon name="arrow-right" class="h-4 w-4 rotate-180" /> Back to categories
+            </a>
+            <section class="ui-panel">
+                <div class="ui-panel-body">
+                    <h2 class="mb-6 break-words text-base font-bold text-gray-900">Edit {{ $category->name }}</h2>
                     <form method="POST" action="{{ route('categories.update', $category) }}">
                         @csrf
                         @method('PATCH')
-
-                        @include('categories.partials.form', [
-                            'category' => $category,
-                            'submitLabel' => 'Save Changes',
-                        ])
+                        @include('categories.partials.form', ['category' => $category, 'submitLabel' => 'Save Changes'])
                     </form>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 </x-app-layout>
