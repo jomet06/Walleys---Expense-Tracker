@@ -1,181 +1,204 @@
+@php
+    $allCategories = $systemCategories->concat($customCategories)->sortBy('name');
+    $insightSearchData = $categoryInsights->map(fn ($category) => [
+        'name' => $category['name'],
+        'type' => $category['type'],
+        'total' => $category['total'],
+    ])->values();
+    $periodStart = $monthStart ?? now()->startOfMonth()->format('Y-m-d');
+    $periodEnd = $monthEnd ?? now()->endOfMonth()->format('Y-m-d');
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ __('Categories') }}
-                </h2>
-                <p class="mt-1 text-sm text-gray-500">
-                    Manage the categories used to organize your income and expenses.
-                </p>
+                <h1 class="ui-title">Category insights</h1>
+                <p class="ui-description">Monthly income and spending, category by category.</p>
             </div>
-
-            <a
-                href="{{ route('categories.create') }}"
-                class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-            >
-                Add Category
+            <a href="{{ route('transactions.create') }}" class="ui-button">
+                <x-ui-icon name="plus" class="h-4 w-4" /> Add Transaction
             </a>
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
-            @if (session('status'))
-                <div class="px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-                    @switch(session('status'))
-                        @case('category-created')
-                            Category created successfully.
-                            @break
+    <div class="ui-page space-y-6" x-data="{
+        type: 'expense', query: '', showUnused: false, items: @js($insightSearchData), deleteId: null, deleteName: '',
+        matches(name, type, total) { return this.type === type && (this.showUnused || Number(total) > 0) && name.toLowerCase().includes(this.query.trim().toLowerCase()); },
+        visibleCount(type) { return this.items.filter(item => item.type === type && this.matches(item.name, item.type, item.total)).length; },
+        confirmDelete(id, name) { this.deleteId = id; this.deleteName = name; this.$dispatch('open-modal', 'delete-category'); }
+    }">
+        @if (session('status'))
+            <div role="status" class="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
+                <x-ui-icon name="check" class="h-5 w-5 shrink-0" />
+                @switch(session('status'))
+                    @case('category-created') Category created successfully. @break
+                    @case('category-updated') Category updated successfully. @break
+                    @case('category-deleted') Category deleted successfully. @break
+                @endswitch
+            </div>
+        @endif
 
-                        @case('category-updated')
-                            Category updated successfully.
-                            @break
+        @if (session('error') === 'category-in-use')
+            <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                This category cannot be deleted because it is still used by one or more transactions.
+            </div>
+        @endif
 
-                        @case('category-deleted')
-                            Category deleted successfully.
-                            @break
-                    @endswitch
-                </div>
-            @endif
-
-            @if (session('error') === 'category-in-use')
-                <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                    This category cannot be deleted because it is still used by one or more transactions.
-                </div>
-            @endif
-
-            <section class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            System Categories
-                        </h3>
-
-                        <p class="mt-1 text-sm text-gray-500">
-                            These categories are available to every user and cannot be edited or deleted.
-                        </p>
+        <section class="ui-panel overflow-hidden" aria-labelledby="category-insights-title">
+            <div class="border-b border-slate-100 px-5 py-6 sm:px-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 id="category-insights-title" class="text-base font-bold text-slate-900">Category breakdown</h2>
+                        <p class="mt-1 text-sm text-slate-500">This calendar month · {{ $monthLabel }}</p>
                     </div>
+                    <div class="inline-flex rounded-xl border border-slate-200 p-1" role="group" aria-label="Choose a category breakdown">
+                        <button type="button" @click="type = 'expense'" :aria-pressed="type === 'expense'" aria-controls="expense-breakdown"
+                            :class="type === 'expense' ? 'bg-rose-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                            class="rounded-lg px-4 py-2 text-sm font-semibold transition">Expense</button>
+                        <button type="button" @click="type = 'income'" :aria-pressed="type === 'income'" aria-controls="income-breakdown"
+                            :class="type === 'income' ? 'bg-emerald-700 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                            class="rounded-lg px-4 py-2 text-sm font-semibold transition">Income</button>
+                    </div>
+                </div>
 
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        @forelse ($systemCategories as $category)
-                            <div class="rounded-lg border border-gray-200 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <h4 class="font-medium text-gray-900">
-                                                {{ $category->name }}
-                                            </h4>
+                @foreach (['expense' => 'Total expenses', 'income' => 'Total income'] as $type => $label)
+                    @php
+                        $typeCategories = $categoryInsights->where('type', $type);
+                        $usedCategoryCount = $typeCategories->where('total', '>', 0)->count();
+                        $typeTransactionCount = (int) $typeCategories->sum('transactionCount');
+                    @endphp
+                    <div class="mt-6" x-show="type === '{{ $type }}'" @if ($type === 'income') style="display: none;" @endif>
+                        <p class="text-xs font-medium text-slate-500">{{ $label }}</p>
+                        <p @class(['mt-2 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-4xl', 'text-rose-600' => $type === 'expense', 'text-emerald-600' => $type === 'income'])>Rp {{ number_format($categorySummary[$type], 0, ',', '.') }}</p>
+                        <p class="mt-2 text-xs text-slate-500">{{ $typeTransactionCount }} {{ $typeTransactionCount === 1 ? 'transaction' : 'transactions' }} across {{ $usedCategoryCount }} {{ $usedCategoryCount === 1 ? 'category' : 'categories' }}</p>
+                    </div>
+                @endforeach
+            </div>
 
-                                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                Default
-                                            </span>
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+                <div class="relative w-full sm:max-w-xs">
+                    <label for="category-search" class="sr-only">Search category breakdown</label>
+                    <x-ui-icon name="search" class="pointer-events-none absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                    <input id="category-search" type="search" x-model="query" class="ui-field pl-10" placeholder="Search categories" autocomplete="off">
+                </div>
+                <label class="flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                    <input type="checkbox" x-model="showUnused" class="h-4 w-4"> Include unused categories
+                </label>
+            </div>
+
+            @foreach (['expense' => 'expenses', 'income' => 'income'] as $type => $typeLabel)
+                @php
+                    $rankedCategories = $categoryInsights->where('type', $type)->sortByDesc('total')->values();
+                    $typeTotal = $categorySummary[$type];
+                @endphp
+                <div id="{{ $type }}-breakdown" x-show="type === '{{ $type }}'" @if ($type === 'income') style="display: none;" @endif>
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5 sm:px-6">
+                        <p class="text-xs font-semibold text-slate-600">Highest {{ $type === 'expense' ? 'spending' : 'income' }} first</p>
+                        <p class="text-xs text-slate-400" aria-live="polite"><span x-text="visibleCount('{{ $type }}')">{{ $rankedCategories->where('total', '>', 0)->count() }}</span> categories shown</p>
+                    </div>
+                    <ol class="grid gap-3 px-5 py-5 sm:grid-cols-2 sm:px-6 xl:grid-cols-3" aria-label="{{ ucfirst($typeLabel) }} by category, highest first">
+                        @foreach ($rankedCategories as $category)
+                            <li class="min-w-0 rounded-xl border border-gray-200 p-4 transition hover:border-brand-200 hover:bg-gray-50/50" data-category-name="{{ $category['name'] }}" data-category-total="{{ $category['total'] }}"
+                                x-show="matches($el.dataset.categoryName, '{{ $type }}', $el.dataset.categoryTotal)"
+                                @if ($category['total'] === 0) style="display: none;" @endif>
+                                <div class="flex items-start gap-3">
+                                    <span @class(['flex h-12 w-12 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $type === 'income', 'bg-rose-50 text-rose-700' => $type === 'expense'])>
+                                        <x-category-icon :name="$category['icon']" class="h-6 w-6" />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-col items-start gap-2">
+                                            <a href="{{ route('transactions.index', ['category_id' => $category['id'], 'type' => $type, 'start_date' => $periodStart, 'end_date' => $periodEnd]) }}" class="min-w-0 break-words text-sm font-semibold text-slate-800 transition hover:text-brand-700">{{ $category['name'] }}</a>
+                                            <p @class(['min-w-0 max-w-full break-words text-sm font-bold tabular-nums sm:text-base', 'text-rose-600' => $type === 'expense' && $category['total'] > 0, 'text-emerald-700' => $type === 'income' && $category['total'] > 0, 'text-slate-400' => $category['total'] === 0])>Rp {{ number_format($category['total'], 0, ',', '.') }}</p>
                                         </div>
-
-                                        <p class="mt-2 text-sm text-gray-500">
-                                            Icon: {{ $category->icon }}
-                                        </p>
+                                        <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                                            <span>{{ $category['transactionCount'] }} {{ $category['transactionCount'] === 1 ? 'transaction' : 'transactions' }}</span>
+                                            <span class="tabular-nums">{{ number_format($category['share'], 1, ',', '.') }}% of {{ $typeLabel }}</span>
+                                        </div>
+                                        <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+                                            <div @class(['h-full rounded-full', 'bg-rose-500' => $type === 'expense', 'bg-emerald-500' => $type === 'income']) style="width: {{ min(100, max(0, $category['share'])) }}%;"></div>
+                                        </div>
                                     </div>
-
-                                    <span
-                                        @class([
-                                            'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
-                                            'bg-green-100 text-green-700' => $category->type === 'income',
-                                            'bg-red-100 text-red-700' => $category->type === 'expense',
-                                        ])
-                                    >
-                                        {{ ucfirst($category->type) }}
-                                    </span>
                                 </div>
-                            </div>
-                        @empty
-                            <p class="text-sm text-gray-500">
-                                No system categories are available.
-                            </p>
-                        @endforelse
+                            </li>
+                        @endforeach
+                    </ol>
+
+                    <div x-show="visibleCount('{{ $type }}') === 0" class="px-5 py-10 text-center sm:px-6">
+                        @if ($typeTotal === 0)
+                            <h3 class="text-sm font-semibold text-slate-800">No {{ $type === 'expense' ? 'expenses' : 'income' }} recorded this month.</h3>
+                            <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">Add a transaction to see your {{ $type === 'expense' ? 'spending' : 'income' }} by category for {{ $monthLabel }}.</p>
+                            <a href="{{ route('transactions.create') }}" class="ui-button mt-5"><x-ui-icon name="plus" class="h-4 w-4" /> Add Transaction</a>
+                        @else
+                            <h3 class="text-sm font-semibold text-slate-800">No categories match your search.</h3>
+                            <button type="button" @click="query = ''" class="ui-link mt-3">Clear search</button>
+                        @endif
                     </div>
+
+                    @if ($typeTotal > 0)
+                        <p class="border-t border-slate-100 px-5 py-4 text-xs leading-relaxed text-slate-400 sm:px-6">Percentages use all {{ $typeLabel }} recorded in {{ $monthLabel }}. Searching only changes the list.</p>
+                    @endif
                 </div>
-            </section>
+            @endforeach
+        </section>
 
-            <section class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            My Categories
-                        </h3>
-
-                        <p class="mt-1 text-sm text-gray-500">
-                            Custom categories created by you.
-                        </p>
-                    </div>
-
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        @forelse ($customCategories as $category)
-                            <div class="rounded-lg border border-gray-200 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <h4 class="font-medium text-gray-900">
-                                            {{ $category->name }}
-                                        </h4>
-
-                                        <p class="mt-2 text-sm text-gray-500">
-                                            Icon: {{ $category->icon }}
-                                        </p>
+        <details class="ui-panel group" @if (session('status') || session('error')) open @endif>
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-5 py-5 [&::-webkit-details-marker]:hidden sm:px-6">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800">Manage categories</h2>
+                    <p class="mt-1 text-xs text-slate-500">{{ $systemCategories->count() }} default · {{ $customCategories->count() }} custom</p>
+                </div>
+                <x-ui-icon name="chevron-down" class="h-5 w-5 text-slate-400 transition-transform group-open:rotate-180" />
+            </summary>
+            <div class="border-t border-slate-100 px-5 pb-2 sm:px-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 py-4">
+                    <p class="max-w-lg text-xs leading-relaxed text-slate-500">Default categories are available to every user and cannot be edited or deleted. Custom categories belong to your account.</p>
+                    <a href="{{ route('categories.create') }}" class="ui-button-secondary"><x-ui-icon name="plus" class="h-4 w-4" /> Add Category</a>
+                </div>
+                <ul class="grid gap-3 py-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Available categories">
+                    @forelse ($allCategories as $category)
+                        <li class="min-w-0 rounded-xl border border-gray-200 p-4 transition hover:border-brand-200 hover:bg-gray-50/50">
+                            <div class="flex items-center gap-3">
+                                <span @class(['flex h-12 w-12 shrink-0 items-center justify-center rounded-xl', 'bg-emerald-50 text-emerald-700' => $category->type === 'income', 'bg-rose-50 text-rose-700' => $category->type === 'expense'])>
+                                    <x-category-icon :name="$category->icon" class="h-6 w-6" />
+                                </span>
+                                <h3 class="min-w-0 flex-1 break-words text-sm font-semibold text-slate-800">{{ $category->display_name }}</h3>
+                            </div>
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                                <span class="{{ $category->type === 'income' ? 'ui-badge-income' : 'ui-badge-expense' }}">{{ ucfirst($category->type) }}</span>
+                                @if ($category->user_id !== null)
+                                    <div class="flex shrink-0 items-center gap-3">
+                                        <a href="{{ route('categories.edit', $category) }}" class="ui-link" aria-label="Edit {{ $category->display_name }}"><x-ui-icon name="edit" class="h-4 w-4" /> Edit</a>
+                                        <form id="delete-category-{{ $category->id }}" method="POST" action="{{ route('categories.destroy', $category) }}"
+                                            @submit.prevent="confirmDelete({{ $category->id }}, $el.dataset.categoryName)" data-category-name="{{ $category->display_name }}"
+                                            onsubmit="if (!window.Alpine) return confirm('Delete this category?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-slate-500 transition hover:text-red-600" aria-label="Delete {{ $category->display_name }}"><x-ui-icon name="trash" class="h-4 w-4" /> Delete</button>
+                                        </form>
                                     </div>
-
-                                    <span
-                                        @class([
-                                            'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
-                                            'bg-green-100 text-green-700' => $category->type === 'income',
-                                            'bg-red-100 text-red-700' => $category->type === 'expense',
-                                        ])
-                                    >
-                                        {{ ucfirst($category->type) }}
-                                    </span>
-                                </div>
-
-                                <div class="mt-4 flex items-center gap-3 border-t border-gray-100 pt-4">
-                                    <a
-                                        href="{{ route('categories.edit', $category) }}"
-                                        class="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                                    >
-                                        Edit
-                                    </a>
-
-                                    <form
-                                        method="POST"
-                                        action="{{ route('categories.destroy', $category) }}"
-                                        onsubmit="return confirm('Are you sure you want to delete this category?');"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button
-                                            type="submit"
-                                            class="text-sm font-medium text-red-600 hover:text-red-800"
-                                        >
-                                            Delete
-                                        </button>
-                                    </form>
-                                </div>
+                                @else
+                                    <span class="text-xs text-gray-400">Default category</span>
+                                @endif
                             </div>
-                        @empty
-                            <div class="sm:col-span-2 lg:col-span-3 rounded-lg border border-dashed border-gray-300 p-8 text-center">
-                                <p class="text-sm text-gray-500">
-                                    You have not created any custom categories yet.
-                                </p>
+                        </li>
+                    @empty
+                        <li class="py-8 text-center text-sm text-slate-500">No categories are available.</li>
+                    @endforelse
+                </ul>
+            </div>
+        </details>
 
-                                <a
-                                    href="{{ route('categories.create') }}"
-                                    class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                                >
-                                    Create your first category
-                                </a>
-                            </div>
-                        @endforelse
-                    </div>
+        <x-modal name="delete-category" maxWidth="md" focusable>
+            <div class="p-6" role="dialog" aria-modal="true" aria-labelledby="delete-category-title" aria-describedby="delete-category-description">
+                <h2 id="delete-category-title" class="text-lg font-bold text-slate-900">Delete category?</h2>
+                <p id="delete-category-description" class="mt-2 text-sm leading-relaxed text-slate-500"><span class="font-semibold text-slate-700" x-text="deleteName"></span> will be removed. Categories used by a transaction cannot be deleted.</p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" class="ui-button-secondary" @click="$dispatch('close')">Keep category</button>
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        @click="document.getElementById('delete-category-' + deleteId)?.submit()">Delete category</button>
                 </div>
-            </section>
-        </div>
+            </div>
+        </x-modal>
     </div>
 </x-app-layout>

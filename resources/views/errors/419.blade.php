@@ -1,0 +1,10 @@
+@extends('errors.layout')
+
+@section('code', '419')
+@section('severity', 'warning')
+@section('title', 'This page has expired.')
+@section('message', 'Sign in again, then retry your action.')
+@section('primary-url', '/login')
+@section('primary-label', 'Sign in again')
+@section('secondary-url', '/')
+@section('secondary-label', 'Back to home')

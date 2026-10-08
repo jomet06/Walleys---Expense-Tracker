@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
+use App\Services\MonthlyCategorySummary;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,23 +15,20 @@ class CategoryController extends Controller
     /**
      * Display the categories available to the authenticated user.
      */
-    public function index(Request $request): View
+    public function index(Request $request, MonthlyCategorySummary $analytics): View
     {
-        $systemCategories = Category::query()
-            ->whereNull('user_id')
-            ->orderBy('type')
-            ->orderBy('name')
-            ->get();
-
-        $customCategories = $request->user()
-            ->categories()
-            ->orderBy('type')
-            ->orderBy('name')
-            ->get();
+        $insights = $analytics->forMonth($request->user(), CarbonImmutable::now());
+        $systemCategories = $insights['categories']->whereNull('user_id')->values();
+        $customCategories = $insights['categories']->whereNotNull('user_id')->values();
 
         return view('categories.index', [
             'systemCategories' => $systemCategories,
             'customCategories' => $customCategories,
+            'monthLabel' => $insights['monthLabel'],
+            'monthStart' => $insights['monthStart'],
+            'monthEnd' => $insights['monthEnd'],
+            'categoryInsights' => $insights['rows'],
+            'categorySummary' => $insights['summary'],
         ]);
     }
 

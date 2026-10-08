@@ -13,76 +13,57 @@
         'others-icon' => 'Others',
         'briefcase-icon' => 'Briefcase',
     ];
+    $selectedIcon = old('icon', $category?->icon);
+    if ($selectedIcon && ! array_key_exists($selectedIcon, $icons)) {
+        $icons[$selectedIcon] = 'Current icon';
+    }
 @endphp
 
-<div>
-    <x-input-label for="name" :value="__('Name')" />
+<div class="space-y-6">
+    <div data-field>
+        <label for="name" class="ui-label">Name</label>
+        <input id="name" name="name" type="text" class="ui-field mt-2" value="{{ old('name', $category?->name) }}" required autofocus maxlength="32" placeholder="e.g. Side projects" data-required-message="Enter a category name."
+            @if ($errors->has('name')) aria-invalid="true" aria-describedby="name-error" @endif>
+        <x-input-error id="name-error" for="name" class="mt-2" :messages="$errors->get('name')" />
+    </div>
 
-    <x-text-input
-        id="name"
-        name="name"
-        type="text"
-        class="mt-1 block w-full"
-        :value="old('name', $category?->name)"
-        required
-        autofocus
-        maxlength="32"
-    />
+    <fieldset data-field @if ($errors->has('type')) data-invalid="true" @endif>
+        <legend class="ui-label">Type</legend>
+        <div class="mt-2 grid grid-cols-2 gap-3">
+            @foreach (['income' => ['Income', 'Money you receive', 'arrow-down'], 'expense' => ['Expense', 'Money you spend', 'arrow-up']] as $value => [$label, $hint, $icon])
+                <label class="relative cursor-pointer">
+                    <input id="type-{{ $value }}" type="radio" name="type" value="{{ $value }}" class="peer sr-only" required @checked(old('type', $category?->type) === $value)
+                        @if ($errors->has('type')) aria-invalid="true" aria-describedby="type-error" @endif>
+                    <span @class(['flex h-full items-center gap-3 rounded-xl border border-gray-200 p-3 transition peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 sm:p-4', 'peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-focus-visible:ring-emerald-500' => $value === 'income', 'peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-focus-visible:ring-rose-500' => $value === 'expense'])>
+                        <x-ui-icon :name="$icon" :class="$value === 'income' ? 'h-5 w-5 shrink-0 text-emerald-600' : 'h-5 w-5 shrink-0 text-rose-600'" />
+                        <span><span class="block text-sm font-semibold text-gray-800">{{ $label }}</span><span class="mt-1 block text-xs text-gray-500">{{ $hint }}</span></span>
+                    </span>
+                </label>
+            @endforeach
+        </div>
+        <x-input-error id="type-error" for="type" class="mt-2" :messages="$errors->get('type')" />
+    </fieldset>
 
-    <x-input-error class="mt-2" :messages="$errors->get('name')" />
-</div>
+    <fieldset data-field @if ($errors->has('icon')) data-invalid="true" @endif>
+        <legend class="ui-label">Icon</legend>
+        <p id="icon-hint" class="mt-1 text-xs text-gray-500">Choose an icon for your transaction list.</p>
+        <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            @foreach ($icons as $value => $label)
+                <label class="relative cursor-pointer">
+                    <input id="icon-option-{{ $loop->index }}" type="radio" name="icon" value="{{ $value }}" class="peer sr-only" required @checked($selectedIcon === $value)
+                        aria-describedby="icon-hint{{ $errors->has('icon') ? ' icon-error' : '' }}" @if ($errors->has('icon')) aria-invalid="true" @endif>
+                    <span class="flex h-full min-h-[90px] flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 p-3 text-gray-500 transition hover:border-brand-200 peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2">
+                        <x-category-icon :name="$value" class="h-5 w-5" />
+                        <span class="text-center text-xs font-medium">{{ $label }}</span>
+                    </span>
+                </label>
+            @endforeach
+        </div>
+        <x-input-error id="icon-error" for="icon" class="mt-2" :messages="$errors->get('icon')" />
+    </fieldset>
 
-<div class="mt-6">
-    <x-input-label for="type" :value="__('Type')" />
-
-    <select
-        id="type"
-        name="type"
-        required
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-    >
-        <option value="">Select a category type</option>
-        <option value="income" @selected(old('type', $category?->type) === 'income')>
-            Income
-        </option>
-        <option value="expense" @selected(old('type', $category?->type) === 'expense')>
-            Expense
-        </option>
-    </select>
-
-    <x-input-error class="mt-2" :messages="$errors->get('type')" />
-</div>
-
-<div class="mt-6">
-    <x-input-label for="icon" :value="__('Icon')" />
-
-    <select
-        id="icon"
-        name="icon"
-        required
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-    >
-        <option value="">Select an icon</option>
-
-        @foreach ($icons as $value => $label)
-            <option value="{{ $value }}" @selected(old('icon', $category?->icon) === $value)>
-                {{ $label }}
-            </option>
-        @endforeach
-    </select>
-
-    <x-input-error class="mt-2" :messages="$errors->get('icon')" />
-</div>
-
-<div class="mt-6 flex items-center gap-4">
-    <x-primary-button>
-        {{ $submitLabel }}
-    </x-primary-button>
-
-    <a
-        href="{{ route('categories.index') }}"
-        class="text-sm text-gray-600 underline hover:text-gray-900"
-    >
-        Cancel
-    </a>
+    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-6">
+        <a href="{{ route('categories.index') }}" class="ui-button-secondary">Cancel</a>
+        <button type="submit" class="ui-button"><x-ui-icon name="check" class="h-4 w-4" /> {{ $submitLabel }}</button>
+    </div>
 </div>
