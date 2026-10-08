@@ -57,7 +57,7 @@
                             :class="type === 'expense' ? 'bg-rose-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
                             class="rounded-lg px-4 py-2 text-sm font-semibold transition">Expense</button>
                         <button type="button" @click="type = 'income'" :aria-pressed="type === 'income'" aria-controls="income-breakdown"
-                            :class="type === 'income' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                            :class="type === 'income' ? 'bg-emerald-700 text-white' : 'text-slate-500 hover:bg-slate-50'"
                             class="rounded-lg px-4 py-2 text-sm font-semibold transition">Income</button>
                     </div>
                 </div>
@@ -107,7 +107,7 @@
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
                                             <a href="{{ route('transactions.index', ['category_id' => $category['id'], 'type' => $type, 'start_date' => $periodStart, 'end_date' => $periodEnd]) }}" class="min-w-0 break-words text-sm font-semibold text-slate-800 transition hover:text-brand-700">{{ $category['name'] }}</a>
-                                            <p @class(['min-w-0 max-w-full break-words text-sm font-bold tabular-nums sm:text-base', 'text-rose-600' => $type === 'expense' && $category['total'] > 0, 'text-emerald-600' => $type === 'income' && $category['total'] > 0, 'text-slate-400' => $category['total'] === 0])>Rp {{ number_format($category['total'], 0, ',', '.') }}</p>
+                                            <p @class(['min-w-0 max-w-full break-words text-sm font-bold tabular-nums sm:text-base', 'text-rose-600' => $type === 'expense' && $category['total'] > 0, 'text-emerald-700' => $type === 'income' && $category['total'] > 0, 'text-slate-400' => $category['total'] === 0])>Rp {{ number_format($category['total'], 0, ',', '.') }}</p>
                                         </div>
                                         <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                                             <span>{{ $category['transactionCount'] }} {{ $category['transactionCount'] === 1 ? 'transaction' : 'transactions' }}</span>
