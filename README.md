@@ -1,36 +1,44 @@
-# Walleys
+# Walleys — Personal Finance & Expense Tracker
 
-Walleys is a personal finance portfolio application built with Laravel 12, PHP 8.3, Breeze (Blade), Tailwind CSS, Alpine.js, Vite, Chart.js, and MySQL. Pest tests use SQLite in memory.
+Walleys is a Laravel application for managing income, expenses, categories, and receipts. It pairs a Blade dashboard with user-scoped database access, Google OAuth identity checks, automated feature tests, and GitHub Actions CI.
 
-## Implemented features
+[Features](#key-features) · [Engineering](#technical-highlights) · [Setup](#installation-and-setup) · [Google OAuth](#google-oauth) · [Testing and CI](#testing-and-ci) · [Status](#project-status-and-known-limitations)
 
-- Email/password registration, login, password reset, session logout, and profile/account management.
-- Google sign-in with Laravel Socialite, verified provider identities, state validation, cancellation/error handling, and protection against email-based account takeover.
-- System and user-owned categories, including ownership checks and deletion protection for categories in use.
-- Income/expense transactions, JPG/PNG/WebP receipts, receipt replacement/deletion, filtering, and pagination.
-- Current-month income, expenses, net balance in Indonesian Rupiah, six-month expense charts, and recent transactions. The monthly breakdown switches between cashflow (combined income and expense movement), income categories, and expense categories.
-- Monthly category insights with ranked amounts, transaction counts, shares, and links to filtered transaction history. Category management remains available below the insights.
-- Responsive app navigation, category icon cards with capitalized display names, semantic income/expense colors, inline form feedback, custom error pages, and confirmation dialogs for logout and destructive actions.
-- Automated feature tests and GitHub Actions for dependency installation, tests, frontend build, and security audits.
+## Key features
 
-Google OAuth implementation is covered by mocked-provider tests. A live Google login still requires your Google Cloud configuration and manual verification; automated tests do not prove that your OAuth consent screen or callback URL is configured correctly.
+- Income/expense transactions with receipt uploads, date/type/category filters, and pagination.
+- System categories and user-owned categories, with deletion protection for categories already used by transactions.
+- Monthly income, expenses, and net balance in Indonesian Rupiah; six-month charts and ranked category insights with links to transaction history.
+- Email/password registration, password reset, logout, profile management, and Google sign-in.
+- Responsive navigation, form feedback, custom error pages, and confirmation dialogs for destructive actions.
 
-## Local installation
+## Technology stack
 
-Requirements: PHP 8.3 or later, Composer 2, Node.js 24, NPM, MySQL, and PHP extensions including mbstring, fileinfo, PDO MySQL and PDO SQLite. Use PHP 8.3 for the same runtime as CI.
+- **Backend:** Laravel 12, PHP 8.3, Eloquent ORM, Laravel Socialite.
+- **Frontend:** Blade with Laravel Breeze scaffolding, Tailwind CSS 3, Alpine.js, Chart.js, Vite.
+- **Database:** MySQL for application data; in-memory SQLite for automated tests.
+- **Quality checks:** Pest, GitHub Actions, Composer and NPM dependency audits.
+
+## Technical highlights
+
+- **Ownership at the server boundary:** [transaction queries](app/Http/Controllers/TransactionController.php) start from the authenticated user's relationship. [Request authorization and validation](app/Http/Requests/TransactionRequest.php) reject other users' transactions and categories, preventing access through manually changed resource IDs.
+- **Explicit identity checks:** [Google authentication](app/Http/Controllers/Auth/GoogleAuthController.php) validates OAuth state and verified provider identity, matches the stable provider ID, regenerates the session, and refuses to automatically link an existing account solely because its email matches. OAuth tokens are not retained because no further Google API access is needed.
+- **Receipt lifecycle:** uploaded images are validated; replacement/deletion removes old files, and a failed transaction update cleans up its newly uploaded file.
+- **Consistent financial data:** amounts are integer Rupiah, bounded to the existing MySQL column. Dashboard analytics use transaction dates and category types, with queries scoped to the signed-in user.
+- **Regression coverage:** [transaction tests](tests/Feature/TransactionTest.php), [category tests](tests/Feature/CategoryTest.php), and [Google authentication tests](tests/Feature/Auth/GoogleAuthenticationTest.php) exercise ownership, validation, file handling, and provider failure cases.
+
+## Installation and setup
+
+Use PHP **8.3** to match CI, Composer 2, Node.js **24**, NPM, MySQL, and PHP extensions including mbstring, DOM, fileinfo, PDO MySQL, and PDO SQLite. Development test dependencies require PHP 8.3 even though the root Composer PHP constraint is broader.
 
 ```bash
 git clone https://github.com/jomet06/Walleys---Expense-Tracker.git
 cd Walleys---Expense-Tracker
 composer install
 npm ci
-cp .env.example .env
-php artisan key:generate
 ```
 
-PowerShell users can use `Copy-Item .env.example .env` instead of `cp`. Never overwrite an existing `.env`.
-
-Create an empty MySQL database named `walleys`. Configure your private `.env`:
+For a fresh clone, copy `.env.example` to `.env` (`cp .env.example .env`, or `Copy-Item .env.example .env` in PowerShell). Never overwrite an existing environment file. Create an empty local MySQL database and configure:
 
 ```dotenv
 APP_NAME=Walleys
@@ -43,43 +51,13 @@ DB_USERNAME=your_database_user
 DB_PASSWORD=your_database_password
 ```
 
-Then apply pending migrations and expose uploaded receipts:
-
 ```bash
+php artisan key:generate
 php artisan migrate
 php artisan storage:link
 ```
 
-For an existing installation, back up the database first and run only `php artisan migrate`. Do not run `migrate:fresh` against development or production data. The Google migration adds a unique nullable provider ID and allows a null password for Google-only users.
-
-Seeders are optional demo data. Inspect them before running: they contain sample accounts and are not intended for production.
-
-## Google OAuth configuration
-
-1. In Google Cloud, configure an OAuth consent screen and create an OAuth client of type **Web application**. If the consent screen is in Testing, add your Google account as a test user.
-2. Add the exact authorized redirect URI for the origin you use. For the commands above it is `http://localhost:8000/auth/google/callback`. For Laragon, use your actual hostname, for example `http://walleys.test/auth/google/callback`. Different hostnames, ports, schemes, or paths must be registered separately.
-3. Set these only in your private `.env`:
-
-```dotenv
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
-```
-
-4. Run `php artisan config:clear`. Use the same hostname throughout login so the session cookie and OAuth state survive the redirect.
-5. Verify live flows: a new Google user, a returning Google user, cancellation, logout, and an email collision with an existing password account.
-
-Without configuration, the Google button returns a friendly error and email/password authentication remains available. Do not send credentials through chat or commit them. Production must use HTTPS and `APP_DEBUG=false`.
-
-Accounts are matched by the stable Google provider ID. An existing account with the same email is **never automatically linked**. Sign in using that account's existing method. Google identities cannot be changed through profile fields; the stored Google-account email is read-only. A Google-only user has no password and can use **Set a password via email** on the profile page. This sends a reset link to the stored account email and signs the user out to open the guest-only Breeze reset form. The **Forgot password** page also works when signed out. Set a password before using password confirmation for account deletion or password changes. Configure a real mail transport for those flows. With `MAIL_MAILER=log` during local development, reset links are written to `storage/logs/laravel.log`.
-
-OAuth access/refresh tokens are not stored because Walleys does not call Google APIs after authentication.
-
-Reference: [Laravel Socialite](https://laravel.com/docs/12.x/socialite) and [Google web-server OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server).
-
-## Development
-
-Run in two terminals:
+Run these in separate terminals:
 
 ```bash
 php artisan serve
@@ -89,9 +67,41 @@ php artisan serve
 npm run dev
 ```
 
-Open the host configured in `APP_URL`. Alternatively, `composer run dev` starts the server, queue listener, log viewer, and Vite together.
+Open the host configured in `APP_URL`. `composer run dev` is an alternative that also starts the queue listener and log viewer.
 
-## Tests and production build
+For an existing installation, back up the database and apply only pending migrations. Do not use `migrate:fresh` against data you want to keep. Seeders contain optional demonstration accounts; inspect them before using them on an isolated local database.
+
+## Google OAuth
+
+1. Configure a Google Cloud OAuth consent screen and a **Web application** client. Add your account as a test user if the consent screen is in Testing.
+2. Register the exact callback URI for your chosen origin, such as `http://localhost:8000/auth/google/callback`. A Laragon hostname needs its own callback registration.
+3. Set your private environment values:
+
+```dotenv
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+```
+
+4. Run `php artisan config:clear` and use the same hostname throughout sign-in so session-backed state can be validated.
+5. Manually verify new/returning users, cancellation, logout, and an email collision with an existing password account.
+
+Without provider configuration, the Google button returns a helpful error while email/password sign-in remains available. Automated OAuth tests mock Socialite; they do not verify a deployed consent screen or callback configuration.
+
+<details>
+<summary>Account linking and password behavior</summary>
+
+Google accounts are matched by provider ID. An existing email account is never automatically linked: sign in with its existing method instead. The stored Google email is read-only and provider identity cannot be changed through profile input.
+
+A Google-only user initially has no password. **Set a password via email** sends a reset link to the stored account email and signs the user out to open the guest-only reset form; **Forgot password** also works when signed out. Set a password before using password confirmation for password changes or account deletion.
+
+Configure a real mail transport for email flows. With `MAIL_MAILER=log`, development reset links are written to `storage/logs/laravel.log`; keep these logs private. Production requires HTTPS and `APP_DEBUG=false`.
+
+</details>
+
+Provider references: [Laravel Socialite](https://laravel.com/docs/12.x/socialite) and [Google web-server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server).
+
+## Testing and CI
 
 ```bash
 php artisan test
@@ -101,14 +111,14 @@ npm audit
 npm audit --omit=dev
 ```
 
-`phpunit.xml` forces `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:`. The test bootstrap refuses to run database tests with another database configuration. Google tests mock Socialite and require no real credentials or network calls.
+[`phpunit.xml`](phpunit.xml) forces in-memory SQLite; the test bootstrap in [`tests/TestCase.php`](tests/TestCase.php) refuses another database configuration. Google tests use a mocked provider and need no real credentials or network calls.
 
-The CI workflow runs PHP 8.3 and Node 24, installs locked dependencies, generates a temporary application key, builds Vite assets, and runs the complete Pest suite. It also audits Composer, production NPM dependencies, and rejects critical frontend advisories.
+The [CI workflow](.github/workflows/ci.yml) runs PHP 8.3 and Node.js 24, installs locked dependencies, builds Vite assets, runs the Pest suite, and audits dependencies, including a critical-advisory gate for frontend packages. A [successful run for commit `fc8c627`](https://github.com/jomet06/Walleys---Expense-Tracker/actions/runs/37805728604) is available; this is evidence for that commit, not a guarantee for later changes.
 
-Some development-only Tailwind 3 dependencies have high/moderate audit advisories without a compatible upstream fix. They are reported by `npm audit`; they are not suppressed. Do not run `npm audit fix --force` blindly, as it replaces Tailwind 3 with Tailwind 4 and requires a CSS/build migration. The critical shell-quote issue is addressed by a patched compatible override.
+## Project status and known limitations
 
-## Storage and data behavior
-
-Amounts are integer Rupiah, with no fractional currency values. Transaction input is bounded to the existing MySQL integer column. Analytics use `transaction_date` and `categories.type`, and all queries are scoped to the authenticated user. Category type changes affect how existing transactions are classified. Uploaded receipts use the public disk: treat receipt URLs as public files and avoid uploading sensitive documents. Account deletion also removes that user's receipt files.
-
-Browser smoke testing and live Google verification must be recorded separately from automated tests before the final release is approved.
+- Portfolio application with implemented features and automated checks; live Google login and browser acceptance testing remain separate from mocked tests.
+- Receipts use the public storage disk. Treat their URLs as public files and do not upload sensitive documents; account deletion also removes the user's receipt files.
+- Changing a category's type changes how its existing transactions are classified.
+- The existing documentation records development-only Tailwind 3 dependency advisories. Audit output can change; rerun checks rather than assuming a past successful CI run means there are no current advisories. Do not use `npm audit fix --force` without reviewing the resulting framework/build changes.
+- The tracked images are logos, not application screenshots. No screenshot or verified public demo is advertised.
